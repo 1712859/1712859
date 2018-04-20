@@ -14,34 +14,27 @@ struct SinhVien
 	wchar_t email;
 };
 typedef struct SinhVien SV;
-wchar_t* DOCTAPTIN(wchar_t *s, FILE* fp)
 
+int KiemTraKetThuc(wchar_t c)
 {
-
-	int i = 0;
-
-	wchar_t c = 'c';
-
-	while (c != ',')
-
-	{
-
-		c = fgetwc(fp);
-
-		s[i] = c;
-
-		i++;
-
-	}
-
-	s[i - 1] = L'\0';
-
-	return s;
-
+	return (c == '\n' || c == EOF);
 }
+int DocDong(wchar_t * dong, int SLDong, FILE *fp)
+{
+	wchar_t c;
+	int i = 0;
+	while (!KiemTraKetThuc(c = fgetc(fp)) && i < SLDong - 1)
+		dong[i++] = c;
+	dong[i] = 0; 
 
+	if (i == SLDong - 1) 
+	while ((c = fgetc(fp)) != '\n') 
+		;
+
+	return i; 
+}
 int main()
 {
-	FILE *fp = fopen("list.csv", "rt");
+	FILE *fp = fopen("list.csv", "r");
 	return 1;
 }
