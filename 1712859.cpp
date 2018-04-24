@@ -25,7 +25,7 @@ struct DanhSach
 	int SLSinhVien;
 };
 int SLdong;
-void DemDong(FILE *fp, int &SLdong)
+/*void DemDong(FILE *fp, int &SLdong)
 {
 	char ch;
 	do
@@ -36,8 +36,7 @@ void DemDong(FILE *fp, int &SLdong)
 			SLdong++;
 		}
 	} while (ch != EOF);
-}
-
+}*/
 wchar_t* DocDK(wchar_t* str, wchar_t Delim)
 {
 	static wchar_t* des = NULL;
@@ -81,34 +80,34 @@ wchar_t* GetInfo(wchar_t* str, int MaxCount)
 }
 void DocvaoSV(wchar_t *s, SV &a)
 {
-	
+
 	wchar_t *pc = DocDK(s, L',');
-		a.MSSV = pc;
+	a.MSSV = pc;
 
-		pc = DocDK(NULL, L',');
-		a.HoVaTen = GetInfo(pc, 30);
+	pc = DocDK(NULL, L',');
+	a.HoVaTen = GetInfo(pc, 30);
 
-		pc = DocDK(NULL, L',');
-		a.Khoa = GetInfo(pc, 30);
+	pc = DocDK(NULL, L',');
+	a.Khoa = GetInfo(pc, 30);
 
-		pc = DocDK(NULL, L',');
-		a.NamHoc = GetInfo(pc, 4);
+	pc = DocDK(NULL, L',');
+	a.NamHoc = GetInfo(pc, 4);
 
-		pc = DocDK(NULL, L',');
-		a.Date = GetInfo(pc, 10);
+	pc = DocDK(NULL, L',');
+	a.Date = GetInfo(pc, 10);
 
-		pc = DocDK(NULL, ',');
-		a.Hinh = GetInfo(pc, 30);
+	pc = DocDK(NULL, ',');
+	a.Hinh = GetInfo(pc, 30);
 
-		pc = DocDK(NULL, ',');
-		a.MoTaBanThan = GetInfo(pc, 1000);
+	pc = DocDK(NULL, ',');
+	a.MoTaBanThan = GetInfo(pc, 1000);
 
-		pc = DocDK(NULL, ',');
-		a.email = GetInfo(pc, 30);
+	pc = DocDK(NULL, ',');
+	a.email = GetInfo(pc, 30);
 
-		pc = DocDK(NULL, '\n');
-		a.SoThich = GetInfo(pc, 1000);
-		
+	pc = DocDK(NULL, '\n');
+	a.SoThich = GetInfo(pc, 1000);
+
 }
 wchar_t* DocDong(FILE *fp)
 {
@@ -177,7 +176,7 @@ void DocFile(FILE *fp, DanhSach &b)
 	while (!feof(fp))
 	{
 		b.SLSinhVien++;
-		temp = (SV*)realloc(b.DS, b.SLSinhVien * sizeof(SV));
+		temp = (SV*)realloc(b.DS, b.SLSinhVien	* sizeof(SV));
 
 		if (temp)
 		{
@@ -188,7 +187,7 @@ void DocFile(FILE *fp, DanhSach &b)
 		else
 		{
 			for (int i = 0; i < b.SLSinhVien - 1; i++)
-			b.DS = NULL;
+				b.DS = NULL;
 		}
 	}
 }
@@ -299,6 +298,35 @@ void viet_1_sv_html(FILE* fo, SV x)
 	fwprintf(fo, L"</html>\n");
 	fclose(fo);
 }
+wint_t WSTRLEN(wchar_t s[])
+{
+	wint_t dem = 0;
+	while (s[dem] != L'\0')
+	{
+		dem++;
+	}
+	return dem;
+}
+wchar_t* NamedFile(SV sv)
+{
+	wchar_t* name = (wchar_t*)malloc((wcslen(sv.MSSV) + wcslen(L".htm") + 1) * sizeof(wchar_t));
+	wcscpy(name, sv.MSSV);
+	wcscpy(name + wcslen(sv.MSSV), L".htm");
+
+	return name;
+}
+void viet_html(int n, DanhSach  a)
+{
+	for (int i = 0; i < n; i++)
+	{
+		FILE *fo;
+		wchar_t *s = NamedFile(a.DS[i]);
+		fo = _wfopen(s, L" w, ccs = UTF-8");
+		if (fo == NULL)
+			wprintf(L"Mo file %ls that bai", s);
+		viet_1_sv_html(fo, a.DS[i]);
+	}
+}
 int main()
 {
 	int i;
@@ -309,9 +337,10 @@ int main()
 		return 0;
 	}
 	DanhSach m;
-	DemDong(fp, SLdong);
-	DocFile(fp,m);
-
+	/*DemDong(fp, SLdong);*/
+	DocFile(fp, m);
+	viet_html(10,m);
 	fclose(fp);
 	return 1;
 }
+
