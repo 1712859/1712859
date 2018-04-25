@@ -4,6 +4,7 @@
 #include <io.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <string.h>
 using namespace std;
 struct SinhVien
 {
@@ -15,8 +16,8 @@ struct SinhVien
 	wchar_t* Hinh;
 	wchar_t* MoTaBanThan;
 	wchar_t* email;
-	wchar_t* SoThich;
-	;
+	wchar_t** SoThich;
+	int nSoThich;
 };
 typedef struct SinhVien SV;
 struct DanhSach
@@ -25,19 +26,95 @@ struct DanhSach
 	int SLSinhVien;
 };
 int SLdong;
-/*void DemDong(FILE *fp, int &SLdong)
+
+/*void dem_sv(FILE* fp, DanhSach &m)
 {
-	char ch;
-	do
-	{
-		ch = fgetc(fp);
-		if (ch == '\n')
-		{
-			SLdong++;
-		}
-	} while (ch != EOF);
+	wchar_t s[2000];
+	int dem = 0;
+	while (feof(fp) == NULL){
+		fgetws(s, 2000, fp);
+		dem++;
+	}
+	m.SLSinhVien = dem - 1;
 }*/
-wchar_t* DocDK(wchar_t* str, wchar_t Delim)
+wchar_t* GmailField(SV sv)
+{
+	wchar_t* gmail = (wchar_t*)malloc((wcslen(sv.MSSV) + wcslen(L"@student.hcmus.edu.vn") + 1) * sizeof(wchar_t));
+	wcscpy(gmail, sv.MSSV);
+	wcscpy(gmail + wcslen(sv.MSSV), L"@student.hcmus.edu.vn");
+
+	return gmail;
+}
+void FreeInfo(SV &sv)
+{
+	free(sv.HoVaTen);
+	sv.HoVaTen = NULL;
+	free(sv.Hinh);
+	sv.Hinh = NULL;
+	free(sv.Khoa);
+	sv.Khoa = NULL;
+	free(sv.MoTaBanThan);
+	sv.MoTaBanThan = NULL;
+	free(sv.MSSV);
+	sv.MSSV = NULL;
+	free(sv.Date);
+	sv.Date = NULL;
+	free(sv.HoVaTen);
+	sv.HoVaTen = NULL;
+	free(sv.NamHoc);
+	sv.NamHoc = NULL;
+
+	for (int i = 0; i < sv.nSoThich; i++)
+	{
+		free(sv.SoThich[i]);
+		sv.SoThich[i] = NULL;
+	}
+	free(sv.SoThich);
+	sv.SoThich = NULL;
+	sv.nSoThich = 0;
+}
+
+void FreeList(DanhSach &Dssv)
+{
+	for (int i = 0; i < Dssv.SLSinhVien; i++)
+		FreeInfo(Dssv.DS[i]);
+	Dssv.DS = NULL;
+	Dssv.SLSinhVien = 0;
+
+}
+wchar_t* Getline(FILE *f)
+{
+	wchar_t* info = NULL;
+	wchar_t* temp = NULL;
+	int count = 0;
+	int i = 0;
+	wchar_t c;
+
+	c = fgetwc(f);
+
+	while (c != L'\n' && !feof(f))
+	{
+		count++;
+		temp = (wchar_t*)malloc( count * sizeof(wchar_t));
+
+		if (temp)
+		{
+			info = temp;
+			info[i] = c;
+			i++;
+		}
+
+		else
+		{
+			free(info);
+			wprintf(L"Đọc thất bại\n");
+		}
+		c = fgetwc(f);
+	}
+	info[i] = L'\0';
+
+	return info;
+}wchar_t* My_wcstok(wchar_t* str, wchar_t Delim)
 {
 	static wchar_t* des = NULL;
 	bool flag = false;
@@ -69,7 +146,6 @@ wchar_t* DocDK(wchar_t* str, wchar_t Delim)
 
 	return str;
 }
-
 wchar_t* GetInfo(wchar_t* str, int MaxCount)
 {
 	int len = (wcslen(str) >= MaxCount) ? MaxCount : wcslen(str);
@@ -78,119 +154,87 @@ wchar_t* GetInfo(wchar_t* str, int MaxCount)
 
 	return info;
 }
-void DocvaoSV(wchar_t *s, SV &a)
+void ReadInStruct(wchar_t* str, SV &sv)
 {
+	wchar_t* pc = My_wcstok(str, L',');
+	sv.MSSV = pc;
 
-	wchar_t *pc = DocDK(s, L',');
-	a.MSSV = pc;
+	pc = My_wcstok(NULL, L',');
+	sv.HoVaTen = pc,
 
-	pc = DocDK(NULL, L',');
-	a.HoVaTen = GetInfo(pc, 30);
+	pc = My_wcstok(NULL, L',');
+	sv.Khoa = pc,
 
-	pc = DocDK(NULL, L',');
-	a.Khoa = GetInfo(pc, 30);
+	pc = My_wcstok(NULL, L',');
+	sv.NamHoc = pc,
 
-	pc = DocDK(NULL, L',');
-	a.NamHoc = GetInfo(pc, 4);
+	pc = My_wcstok(NULL, L',');
+	sv.Date = pc,
 
-	pc = DocDK(NULL, L',');
-	a.Date = GetInfo(pc, 10);
+	pc = My_wcstok(NULL, ',');
+	sv.Hinh = pc,
 
-	pc = DocDK(NULL, ',');
-	a.Hinh = GetInfo(pc, 30);
+	pc = My_wcstok(NULL, ',');
+	sv.MoTaBanThan = pc;
 
-	pc = DocDK(NULL, ',');
-	a.MoTaBanThan = GetInfo(pc, 1000);
+	pc = My_wcstok(NULL, ',');
 
-	pc = DocDK(NULL, ',');
-	a.email = GetInfo(pc, 30);
-
-	pc = DocDK(NULL, '\n');
-	a.SoThich = GetInfo(pc, 1000);
-
-}
-wchar_t* DocDong(FILE *fp)
-{
-
-	wchar_t* s = NULL;
-	wchar_t* temp = NULL;
-	int count = 1;
-	int i = 0;
-	wchar_t c;
-
-	c = fgetwc(fp);
-
-	while (c != L'\n')
+	while (pc)
 	{
-		count++;
-		temp = (wchar_t*)realloc(s, count * sizeof(wchar_t));
+		sv.nSoThich++;
+		wchar_t** temp = (wchar_t**)malloc( sv.nSoThich * sizeof(wchar_t*));
 
 		if (temp)
 		{
-			s = temp;
-			s[i] = c;
-			i++;
-		}
-		c = fgetwc(fp);
-	}
-	s[i] = L'\0';
-
-	return s;
-}
-wchar_t* Getline(FILE *f)
-{
-	wchar_t* info = NULL;
-	wchar_t* temp = NULL;
-	int count = 1;
-	int i = 0;
-	wchar_t c;
-
-	c = fgetwc(f);
-
-	while (c != L'\n')
-	{
-		count++;
-		temp = (wchar_t*)realloc(info, count * sizeof(wchar_t));
-
-		if (temp)
-		{
-			info = temp;
-			info[i] = c;
-			i++;
+			sv.SoThich = temp;
+			sv.SoThich[sv.nSoThich - 1] = pc;
 		}
 
 		else
 		{
-			free(info);
-			wprintf(L"Đọc thất bại\n");
-		}
-		c = fgetwc(f);
-	}
-	info[i] = L'\0';
+			for (int k = 0; k < sv.nSoThich; k++)
+			{
+				free(sv.SoThich[k]);
+				sv.SoThich[k] = NULL;
+			}
 
-	return info;
+			free(sv.SoThich);
+			sv.SoThich = NULL;
+		}
+		pc = My_wcstok(NULL, L',');
+	}
 }
-void DocFile(FILE *fp, DanhSach &b)
+void ReadFileCSV(FILE *f, DanhSach &Dssv)
 {
+
 	SV* temp = NULL;
-	while (!feof(fp))
+
+	while (!feof(f))
 	{
-		b.SLSinhVien++;
-		temp = (SV*)realloc(b.DS, b.SLSinhVien	* sizeof(SV));
+		Dssv.SLSinhVien++;
+		temp = (SV*)malloc( Dssv.SLSinhVien * sizeof(SV));
 
 		if (temp)
 		{
-			b.DS = temp;
-			wchar_t* line = Getline(fp);
-			DocvaoSV(line, b.DS[b.SLSinhVien - 1]);
+			Dssv.DS = temp;
+			wchar_t* line = Getline(f);
+			SV k;
+			ReadInStruct(line, k);
+			Dssv.DS[Dssv.SLSinhVien - 1] = k;
+
 		}
 		else
 		{
-			for (int i = 0; i < b.SLSinhVien - 1; i++)
-				b.DS = NULL;
+			for (int i = 0; i < Dssv.SLSinhVien - 1; i++)
+				FreeInfo(Dssv.DS[i]);
+			Dssv.DS = NULL;
 		}
 	}
+	fclose(f);
 }
+
+
+
 void viet_1_sv_html(FILE* fo, SV x)
 {
 	fwprintf(fo, L"<!DOCTYPE html PUBLIC \" -//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n");
@@ -268,13 +312,16 @@ void viet_1_sv_html(FILE* fo, SV x)
 	fwprintf(fo, L"<div>\n");
 	fwprintf(fo, L"<ul class=\"TextInList\">\n");
 	fwprintf(fo, L"<li>");
-	fwprintf(fo, x.SoThich);
+	fwprintf(fo, x.SoThich[1]);
+	fwprintf(fo, L"</li>\n");
+	fwprintf(fo, L"<li>");
+	fwprintf(fo, x.SoThich[2]);
 	fwprintf(fo, L"</li>\n");
 	fwprintf(fo, L"</ul>\n");
 	fwprintf(fo, L"</div>\n");
 	fwprintf(fo, L"<div class=\"InfoGroup\">Mô tả</div>\n");
 	fwprintf(fo, L"<div class=\"Description\">\n");
-	fwprintf(fo, x.MoTaBanThan);//
+	fwprintf(fo, x.MoTaBanThan);
 	fwprintf(fo, L"</div>\n");
 	fwprintf(fo, L"</div>\n");
 	fwprintf(fo, L"</div>\n");
@@ -330,17 +377,18 @@ void viet_html(int n, DanhSach  a)
 int main()
 {
 	int i;
-	FILE *fp = _wfopen(L"list.csv", L"r , ccs=UTF-8");
+	FILE *fp = _wfopen(L"Book1.csv", L"r , ccs=UTF-8");
 	if (!fp)
 	{
 		wprintf(L"Mo file  that bai\n");
 		return 0;
 	}
 	DanhSach m;
-	/*DemDong(fp, SLdong);*/
-	DocFile(fp, m);
-	viet_html(10,m);
+	//dem_sv(fp, m);
+	ReadFileCSV(fp, m);
+	viet_html(10, m);
 	fclose(fp);
 	return 1;
 }
+
 
